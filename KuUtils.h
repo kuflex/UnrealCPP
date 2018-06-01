@@ -1,6 +1,9 @@
 #pragma once
 
 //Some utils for working with UE by Kuflex
+#include "CoreMinimal.h"
+#include "FileHelper.h"
+#include "FileManagerGeneric.h"
 
 #include <vector>
 #include <string>
@@ -8,12 +11,17 @@
 #include <iostream>
 #include <sstream>  //ostringsream
 #include <iomanip>  //setprecision
+#include <fstream>
+
+
+
 using namespace std;
 
 #define KU_PRINT(text) { if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2, FColor::White,string(text).c_str()); } 
 #define KU_PRINT_FSTRING(text) { if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2, FColor::White,text); } 
 #define KU_LOG(text) UE_LOG(LogTemp, Warning, TEXT(text));
 
+#define KU_DEG_TO_RAD (3.1415926535 / 180.0)
 
 struct ku {
 	
@@ -157,6 +165,72 @@ struct ku {
 	}
 
 	//----------------------------------------
-	
+	static bool fileExists(string fileName) {
+		ifstream inp;
+		inp.open(fileName.c_str(), ifstream::in);
+		inp.close();
+		return !inp.fail();
+	}
+
+	//----------------------------------------
+	static vector<string> scan_folder(string folder, string mask = "*.*", bool search_folders = false) {
+		TArray<FString> FileNames;
+		FFileManagerGeneric FileMgr;
+		FileMgr.SetSandboxEnabled(true);// don't ask why, I don't know :P
+		FString wildcard(ANSI_TO_TCHAR(mask.c_str())); // May be "" (empty string) to search all files
+								   //FString search_path(FPaths::Combine(*FPaths::GameDir(), TEXT("Data"), *wildcard));
+
+		FString search_path(FPaths::Combine(ANSI_TO_TCHAR(folder.c_str()), *wildcard));
+		//KU_PRINT(TCHAR_TO_ANSI(*search_path));
+
+		FileMgr.FindFiles(FileNames, *search_path,
+			!search_folders,  // to list files
+			search_folders); // to skip directories
+
+		vector<string> files;
+		for (auto f : FileNames)
+		{
+			FString filename(f);
+			//f.RemoveFromEnd(ANSI_TO_TCHAR(remove_extension));   //".xml");
+			//KU_PRINT(TCHAR_TO_ANSI(*f));
+			files.push_back(TCHAR_TO_ANSI(*f));
+			//OutputDebugStringA(TCHAR_TO_ANSI(*(f + "\n")));
+		}
+
+		FileNames.Empty();// Clear array
+
+		return files;
+	}
+
+	//----------------------------------------
+	static vector<string> read_strings(string fileName) {
+		//kuAssert(kuFileExists(fileName), "read_strings no file " + fileName);
+		vector<string> lines;
+		ifstream f(fileName.c_str(), ios::in | ios::binary);
+		string line;
+		while (getline(f, line)) {
+			if (line == "") continue;
+			else {
+				//убираем в конце '\r' для правильного считывания windows-файлов в linux
+				//и в windows также сейчас такие есть
+				while (!line.empty() && line[line.length()-1] == '\r') {
+					line = line.substr(0, line.length() - 1);
+				}
+				lines.push_back(line);
+			}
+		}
+		return lines;
+	}
+
+	//----------------------------------------
+	static void write_strings(const vector<string> &list, string fileName) {
+		ofstream f(fileName.c_str(), ios::out);
+		//kuAssert(!f.fail(), "write_strings - error creating file " + fileName);
+		for (size_t i = 0; i<list.size(); i++) {
+			f << list[i] << endl;
+		}
+		//kuAssert(!f.fail(), "write_strings - error writing file " + fileName);
+		f.close();
+	}
 
 };
