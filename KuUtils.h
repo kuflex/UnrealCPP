@@ -15,27 +15,29 @@
 
 
 
-using namespace std;
+//std::std::string  namespace std;
 
-#define KU_PRINT(text) { if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2, FColor::White,string(text).c_str()); } 
-#define KU_PRINT_FSTRING(text) { if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2, FColor::White,text); } 
+extern bool KU_PRINT_ENABLED;	//should be declared somethere for controlling printing to screen
+
+#define KU_PRINT(text) { if (KU_PRINT_ENABLED && GEngine) GEngine->AddOnScreenDebugMessage(-1, 2, FColor::White,std::string(text).c_str()); } 
+#define KU_PRINT_FSTRING(text) { if (KU_PRINT_ENABLED && GEngine) GEngine->AddOnScreenDebugMessage(-1, 2, FColor::White,text); } 
 #define KU_LOG(text) UE_LOG(LogTemp, Warning, TEXT(text));
 
 #define KU_DEG_TO_RAD (3.1415926535 / 180.0)
 
 struct ku {
 	
-	static string toString(FString v) {
+	static std::string toString(FString v) {
 		return TCHAR_TO_UTF8(*v);
 	}
 
 	template <class T>	//T = AActor, AStaticMeshActor, ...
-	static T* find_actor(string name0, UObject * WorldContextObject) {
+	static T* find_actor(std::string name0, UObject * WorldContextObject) {
 		UWorld * World = GEngine->GetWorldFromContextObject(WorldContextObject);
 		if (World) {
 			for (TActorIterator<T> ActorItr(World); ActorItr; ++ActorItr)
 			{
-				string name = //TCHAR_TO_UTF8(*ActorItr->GetName());
+				std::string name = //TCHAR_TO_UTF8(*ActorItr->GetName());
 					TCHAR_TO_UTF8(*UKismetSystemLibrary::GetDisplayName(*ActorItr));
 				if (name == name0) {
 					return *ActorItr;
@@ -63,16 +65,16 @@ struct ku {
 
 	//----------------------------------------
 	//These functions are copied from openFrameworks source code http://openframeworks.cc
-	static vector <string> splitString(const string &source, const string &delimiter, bool ignoreEmpty = false) {
-		vector<string> result;
+	static std::vector <std::string> splitString(const std::string &source, const std::string &delimiter, bool ignoreEmpty = false) {
+		std::vector<std::string> result;
 		if (delimiter.empty()) {
 			result.push_back(source);
 			return result;
 		}
-		string::const_iterator substart = source.begin(), subend;
+		std::string::const_iterator substart = source.begin(), subend;
 		while (true) {
 			subend = search(substart, source.end(), delimiter.begin(), delimiter.end());
-			string sub(substart, subend);
+			std::string sub(substart, subend);
 			if (!ignoreEmpty || !sub.empty()) {
 				result.push_back(sub);
 			}
@@ -86,39 +88,39 @@ struct ku {
 
 	//----------------------------------------
 	template <class T>
-	static string toString(const T& value) {
-		ostringstream out;
+	static std::string toString(const T& value) {
+		std::ostringstream out;
 		out << value;
 		return out.str();
 	} 
 
 	//----------------------------------------
 	template <class T>
-	static string toString(const T& value, int precision) {
-		ostringstream out;
+	static std::string toString(const T& value, int precision) {
+		std::ostringstream out;
 		out << fixed << setprecision(precision) << value;
 		return out.str();
 	}
 
 	//----------------------------------------
 	template <class T>
-	static string toString(const T& value, int width, char fill) {
-		ostringstream out;
+	static std::string toString(const T& value, int width, char fill) {
+		std::ostringstream out;
 		out << fixed << setfill(fill) << setw(width) << value;
 		return out.str();
 	}
 
 	//----------------------------------------
 	template <class T>
-	static string toString(const T& value, int precision, int width, char fill) {
-		ostringstream out;
+	static std::string toString(const T& value, int precision, int width, char fill) {
+		std::ostringstream out;
 		out << fixed << setfill(fill) << setw(width) << setprecision(precision) << value;
 		return out.str();
 	}
 
 	//----------------------------------------
 	template<class T>
-	static string toString(const vector<T>& values) {
+	static std::string toString(const std::vector<T>& values) {
 		stringstream out;
 		int n = values.size();
 		out << "{";
@@ -133,51 +135,51 @@ struct ku {
 	}
 
 	//----------------------------------------
-	static int toInt(const string& intString) {
+	static int toInt(const std::string& intString) {
 		int x = 0;
-		istringstream cur(intString);
+		std::istringstream cur(intString);
 		cur >> x;
 		return x;
 	}
 
 	//----------------------------------------
-	static float toFloat(const string& floatString) {
+	static float toFloat(const std::string& floatString) {
 		float x = 0;
-		istringstream cur(floatString);
+		std::istringstream cur(floatString);
 		cur >> x;
 		return x;
 	}
 
 	//----------------------------------------
-	static double toDouble(const string& doubleString) {
+	static double toDouble(const std::string& doubleString) {
 		double x = 0;
-		istringstream cur(doubleString);
+		std::istringstream cur(doubleString);
 		cur >> x;
 		return x;
 	}
 
 	//----------------------------------------
-	static char toChar(const string& charString) {
+	static char toChar(const std::string& charString) {
 		char x = '\0';
-		istringstream cur(charString);
+		std::istringstream cur(charString);
 		cur >> x;
 		return x;
 	}
 
 	//----------------------------------------
-	static bool fileExists(string fileName) {
-		ifstream inp;
-		inp.open(fileName.c_str(), ifstream::in);
+	static bool fileExists(std::string fileName) {
+		std::ifstream inp;
+		inp.open(fileName.c_str(), std::ifstream::in);
 		inp.close();
 		return !inp.fail();
 	}
 
 	//----------------------------------------
-	static vector<string> scan_folder(string folder, string mask = "*.*", bool search_folders = false) {
+	static std::vector<std::string> scan_folder(std::string folder, std::string mask = "*.*", bool search_folders = false) {
 		TArray<FString> FileNames;
 		FFileManagerGeneric FileMgr;
 		FileMgr.SetSandboxEnabled(true);// don't ask why, I don't know :P
-		FString wildcard(ANSI_TO_TCHAR(mask.c_str())); // May be "" (empty string) to search all files
+		FString wildcard(ANSI_TO_TCHAR(mask.c_str())); // May be "" (empty std::string) to search all files
 								   //FString search_path(FPaths::Combine(*FPaths::GameDir(), TEXT("Data"), *wildcard));
 
 		FString search_path(FPaths::Combine(ANSI_TO_TCHAR(folder.c_str()), *wildcard));
@@ -187,7 +189,7 @@ struct ku {
 			!search_folders,  // to list files
 			search_folders); // to skip directories
 
-		vector<string> files;
+		std::vector<std::string> files;
 		for (auto f : FileNames)
 		{
 			FString filename(f);
@@ -203,11 +205,11 @@ struct ku {
 	}
 
 	//----------------------------------------
-	static vector<string> read_strings(string fileName) {
+	static std::vector<std::string> read_strings(std::string fileName) {
 		//kuAssert(kuFileExists(fileName), "read_strings no file " + fileName);
-		vector<string> lines;
-		ifstream f(fileName.c_str(), ios::in | ios::binary);
-		string line;
+		std::vector<std::string> lines;
+		std::ifstream f(fileName.c_str(), std::ios::in | std::ios::binary);
+		std::string line;
 		while (getline(f, line)) {
 			if (line == "") continue;
 			else {
@@ -223,11 +225,11 @@ struct ku {
 	}
 
 	//----------------------------------------
-	static void write_strings(const vector<string> &list, string fileName) {
-		ofstream f(fileName.c_str(), ios::out);
+	static void write_strings(const std::vector<std::string> &list, std::string fileName) {
+		std::ofstream f(fileName.c_str(), std::ios::out);
 		//kuAssert(!f.fail(), "write_strings - error creating file " + fileName);
 		for (size_t i = 0; i<list.size(); i++) {
-			f << list[i] << endl;
+			f << list[i] << std::endl;
 		}
 		//kuAssert(!f.fail(), "write_strings - error writing file " + fileName);
 		f.close();
